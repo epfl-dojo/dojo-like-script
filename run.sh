@@ -8,12 +8,6 @@ if [ -e $GHTOKEN ]; then
   exit 1
 fi
 
-if [ -e $ORGA ]; then
-  echo "FAIL: Organization not found"
-  echo "export ORGA=yourorganization"
-  exit 1
-fi
-
 echo -n "Like a User or an Organization? [U/O] : "
 read userInput
 if [[ "$userInput" == "O" ]] || [[ "$userInput" == "o" ]];
