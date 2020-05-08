@@ -1,7 +1,11 @@
 #!/bin/bash
 
+repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/orgs/epfl-dojo/repos | jq )
 
-request=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/orgs/epfl-dojo/repos);
+repo_name=animated-broccoli
+
+
+request=$(curl -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/epfl-dojo/${repo_name});
 
 echo $request;
 
