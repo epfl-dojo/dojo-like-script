@@ -98,7 +98,7 @@ for i in $(seq $page_number); do
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
     # echo $request
     if [[ $request > 200 && $request < 300 ]]; then
-      echo "$repo_name is now stargazed"
+      echo "$repo_name is now stargazed!!!"
     else
       echo "Failed to stargaze $repo_name"
     fi
