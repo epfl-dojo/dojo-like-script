@@ -1,8 +1,15 @@
 #!/bin/bash
 
-repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/orgs/epfl-dojo/repos | jq '.[].name')
+if [ -n $GHTOKEN ]; then
+  echo "FAIL: GHTOKEN not found"
+  echo "Please generate a GitHub API token from https://github.com/settings/tokens"
+  echo "and export it: "
+  echo "export GHTOKEN=yourkey"
+  exit 1
+fi
+
+repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/orgs/epfl-dojo/repos)
 echo $repositories
-repo_name=animated-broccoli
 
 for repo_name in $repositories
 do
