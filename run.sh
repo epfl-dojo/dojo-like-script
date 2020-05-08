@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -n $GHTOKEN ]; then
+if [ -e $GHTOKEN ]; then
   echo "FAIL: GHTOKEN not found"
   echo "Please generate a GitHub API token from https://github.com/settings/tokens"
   echo "and export it: "
@@ -8,7 +8,7 @@ if [ -n $GHTOKEN ]; then
   exit 1
 fi
 
-repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/orgs/epfl-dojo/repos)
+repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/orgs/epfl-dojo/repos | jq '.[].name')
 echo $repositories
 
 for repo_name in $repositories
