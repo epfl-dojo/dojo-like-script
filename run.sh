@@ -10,8 +10,8 @@ do
   # Thanks to https://stackoverflow.com/a/9733456
   temp="${repo_name%\"}"
   clean_name="${temp#\"}"
-  request=$(curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/epfl-dojo/${clean_name});
-  # echo $request
+  request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/epfl-dojo/${clean_name});
+  echo $request
   if [[ $request > 200 && $request < 400 ]]; then
     echo "Good job"
   else
