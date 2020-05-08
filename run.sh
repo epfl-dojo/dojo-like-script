@@ -65,21 +65,31 @@ if [[ "$test_url" == "\"Not Found\"" ]]; then
 fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
-link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} -I | grep -i link:)
-
-# Retrieve API link for repo
-page_url=$(echo $link_header | cut -d "," -f 1 | cut -d ">" -f 1)
-page_url="${page_url#"Link: <"}"
-page_url=${page_url::-1}
-# At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
-# Retrieve max page number
-page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d ">" -f 1)
+link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} -I | grep -i link: || true)
+echo $link_header
+if [[ -z $link_header ]]; then
+  page_number=1
+  page_url=$REPO_URL
+  ADD_PG_NUM=false
+else
+  # Retrieve API link for repo
+  page_url=$(echo $link_header | cut -d "," -f 1 | cut -d ">" -f 1)
+  page_url="${page_url#"Link: <"}"
+  page_url=${page_url::-1}
+  ADD_PG_NUM=true
+  # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
+  # Retrieve max page number
+  page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d ">" -f 1)
+fi
 
 # For each page...
 for i in $(seq $page_number); do
   # Retrieve all repositories names
-  repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
-
+  if [[ $ADD_PG_NUM == "true" ]]; then
+    repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
+  else
+    repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].name')
+  fi
   # For each batch of repositories name...
   for repo_name in $repositories; do
     # Thanks to https://stackoverflow.com/a/9733456
