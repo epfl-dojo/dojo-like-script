@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -x
+# set -e -x
 
 # Ensure that GHTOKEN is defined
 if [ -e $GHTOKEN ]; then
@@ -18,8 +18,7 @@ function usage {
 }
 
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
-for i in "$@"
-do
+for i in "$@"; do
 case $i in
   -o=*|--org=*|--organisation=*|--organization=*)
   GH_ORG="${i#*=}"
@@ -40,7 +39,8 @@ done
 
 # Ensure one of the options is set
 if [[ -z $GH_ORG && -z $GH_USER ]]; then
-  usage
+  # usage
+  GH_ORG=epfl-dojo
 fi
 
 if [[ ! -z $GH_ORG ]]; then
@@ -57,28 +57,40 @@ fi
 REPO_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/repos
 
 # Test if user or org exists
-test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.message')
+test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.message' 2>/dev/null || true)
 
 if [[ "$test_url" == "\"Not Found\"" ]]; then
   echo "Sorry, $REPO_URL not found"
   exit 1
 fi
 
-# echo "DEBUG: curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.[].name'"
-repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.[].name')
-echo $repositoriesactact
+# Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
+link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} -I | grep -i link:)
 
-for repo_name in $repositories
-do
-  echo $repo_name
-  # Thanks to https://stackoverflow.com/a/9733456
-  temp="${repo_name%\"}"
-  clean_name="${temp#\"}"
-  request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
-  echo $request
-  if [[ $request > 200 && $request < 400 ]]; then
-    echo "Good job"
-  else
-    echo "Failed"
-  fi
+# Retrieve API link for repo
+page_url=$(echo $link_header | cut -d "," -f 1 | cut -d ">" -f 1)
+page_url="${page_url#"Link: <"}"
+page_url=${page_url::-1}
+# At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
+# Retrieve max page number
+page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d ">" -f 1)
+
+# For each page...
+for i in $(seq $page_number); do
+  # Retrieve all repositories names
+  repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
+
+  # For each batch of repositories name...
+  for repo_name in $repositories; do
+    # Thanks to https://stackoverflow.com/a/9733456
+    temp="${repo_name%\"}"
+    clean_name="${temp#\"}"
+    request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
+    # echo $request
+    if [[ $request > 200 && $request < 300 ]]; then
+      echo "$repo_name is now stargazed"
+    else
+      echo "Failed to stargaze $repo_name"
+    fi
+  done
 done
