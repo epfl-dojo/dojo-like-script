@@ -1,12 +1,14 @@
 # dojo-like-script
 
-A script to like all epfl-dojo repo
+A script to like all repo from a user or an organisation on GitHub.
+
 
 ## Usage
 
   1. Generate an [access token](https://github.com/settings/tokens)
   1. Export your GHTOKEN env var
   1. Run the script with `./run.sh` (the default org is [epfl-dojo](https://github.com/epfl-dojo))
+
 
 ## Script options
   - Display help: `./run.sh --help`
@@ -23,3 +25,19 @@ A script to like all epfl-dojo repo
 ## Links
   * Generate an [access token](https://github.com/settings/tokens)
   * [Star a repository](https://developer.github.com/v3/activity/starring/#star-a-repository-for-the-authenticated-user)
+
+
+## Support
+
+If you like this script, you can show your support by using it with the
+following usernames ([contributors](https://github.com/epfl-dojo/dojo-like-script/graphs/contributors)):
+
+```
+./run.sh -u=loichu
+./run.sh -u=ponsfrilus
+./run.sh -u=richmartins
+./run.sh -u=Roccom14
+./run.sh -u=SaphireVert
+./run.sh -u=TacticsCH
+./run.sh -u=zuzu59
+```
