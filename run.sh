@@ -13,7 +13,11 @@ fi
 
 # Print the script usage
 function usage {
-  echo "Usage: ./run.sh --org=epfl-dojo"
+  echo "Usage: ./run.sh"
+  echo "  ./run.sh --organisation=epfl-dojo"
+  echo "  ./run.sh --user=ponsfrilus"
+  echo "Note that you can use -o or -u for short hand."
+  echo "This script will need bash > 4.2"
   exit 0
 }
 
@@ -66,7 +70,7 @@ fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
 link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} -I | grep -i link: || true)
-echo $link_header
+# echo $link_header
 if [[ -z $link_header ]]; then
   page_number=1
   page_url=$REPO_URL
@@ -75,6 +79,8 @@ else
   # Retrieve API link for repo
   page_url=$(echo $link_header | cut -d "," -f 1 | cut -d ">" -f 1)
   page_url="${page_url#"Link: <"}"
+  # https://unix.stackexchange.com/a/144330
+  # Need bash > 4.2
   page_url=${page_url::-1}
   ADD_PG_NUM=true
   # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
