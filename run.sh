@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e -x
+
+# Ensure that GHTOKEN is defined
 if [ -e $GHTOKEN ]; then
   echo "FAIL: GHTOKEN not found"
   echo "Please generate a GitHub API token from https://github.com/settings/tokens"
@@ -8,26 +11,61 @@ if [ -e $GHTOKEN ]; then
   exit 1
 fi
 
-echo -n "Like a User or an Organization? [U/O] : "
-read userInput
-if [[ "$userInput" == "O" ]] || [[ "$userInput" == "o" ]];
-then
-    IN="orgs"
-elif [[ "$userInput" == "U" ]] || [[ "$userInput" == "u" ]];
-then
-    IN="users"
+# Print the script usage
+function usage {
+  echo "Usage: ./run.sh --org=epfl-dojo"
+  exit 0
+}
+
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+for i in "$@"
+do
+case $i in
+  -o=*|--org=*|--organisation=*|--organization=*)
+  GH_ORG="${i#*=}"
+  shift # past argument=value
+  ;;
+  -u=*|--user=*)
+  GH_USER="${i#*=}"
+  shift # past argument=value
+  ;;
+  -h|--help)
+  usage
+  ;;
+  *)
+    # unknown option
+  ;;
+esac
+done
+
+# Ensure one of the options is set
+if [[ -z $GH_ORG && -z $GH_USER ]]; then
+  usage
 fi
 
-echo -n "Whose repositories do you want to like? : "
-read userInput
-if [[ -n "$userInput" ]]
-then
-  TARGET=$userInput
+if [[ ! -z $GH_ORG ]]; then
+  OrgsOrUsers='orgs'
+  TARGET=$GH_ORG
+  echo "Looking for $GH_ORG repositories"
 fi
-    echo ... Liking ${TARGET} repositories ...
+if [[ ! -z $GH_USER ]]; then
+  OrgsOrUsers='users'
+  TARGET=$GH_USER
+  echo "Looking for $GH_USER repositories"
+fi
 
+REPO_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/repos
 
-repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/${IN}/${TARGET}/repos | jq '.[].name')
+# Test if user or org exists
+test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.message')
+
+if [[ "$test_url" == "\"Not Found\"" ]]; then
+  echo "Sorry, $REPO_URL not found"
+  exit 1
+fi
+
+# echo "DEBUG: curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.[].name'"
+repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.[].name')
 echo $repositoriesactact
 
 for repo_name in $repositories
