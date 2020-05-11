@@ -21,6 +21,13 @@ function usage {
   exit 0
 }
 
+# parseQueryString "<https://api.github.com/organizations/24317326/repos?page=42>" page
+# Return 42
+function parseQueryString {
+  number=$(echo $1 | grep -oP "(\?|&)${2}=\K([0-9]+)")
+  echo $number
+}
+
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 for i in "$@"; do
 case $i in
@@ -71,7 +78,6 @@ if [[ ! -z $GH_ORGFOLLOW ]]; then
 fi
 
 REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=5   #${resultsPerPage}
-
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
 
@@ -90,6 +96,7 @@ if [[ -z $link_header ]]; then
   ADD_PG_NUM=false
 else
   # Retrieve API link for repo
+  echo $page_url
   page_url=$(echo $link_header | cut -d "," -f 1 | cut -d ">" -f 1)
   page_url="${page_url#"Link: <"}"
   # https://unix.stackexchange.com/a/144330
@@ -98,10 +105,9 @@ else
   ADD_PG_NUM=true
   # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
   # Retrieve max page number
-  page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d "&" -f 1)
+  link_header=$(echo $link_header | cut -d "," -f 2 | cut -d ";" -f 1)
 
-  echo $page_number
-
+  page_number=$(parseQueryString ${link_header} page)
 fi
 
 
