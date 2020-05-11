@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -e -x
+set -e -x
 
 # Ensure that GHTOKEN is defined
 if [ -e $GHTOKEN ]; then
@@ -28,6 +28,10 @@ case $i in
   GH_USER="${i#*=}"
   shift # past argument=value
   ;;
+  -fufo=*|--follow-users-from-org=*)
+  GH_ORGFOLLOW="${i#*=}"
+  shift # past argument=value
+  ;;
   -h|--help)
   usage
   ;;
@@ -45,31 +49,39 @@ fi
 
 if [[ ! -z $GH_ORG ]]; then
   OrgsOrUsers='orgs'
+  UsersOrRepo='repos'
   TARGET=$GH_ORG
   echo "Looking for $GH_ORG repositories"
 fi
 if [[ ! -z $GH_USER ]]; then
   OrgsOrUsers='users'
+  UsersOrRepo='repos'
   TARGET=$GH_USER
   echo "Looking for $GH_USER repositories"
 fi
+if [[ ! -z $GH_ORGFOLLOW ]]; then
+  OrgsOrUsers='orgs'
+  UsersOrRepo='members'
+  TARGET=$GH_ORGFOLLOW
+  echo "Looking for $GH_ORGFOLLOW users"
+fi
 
-REPO_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/repos
+REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${UsersOrRepo}
 
 # Test if user or org exists
-test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} | jq '.message' 2>/dev/null || true)
+test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
 
 if [[ "$test_url" == "\"Not Found\"" ]]; then
-  echo "Sorry, $REPO_URL not found"
+  echo "Sorry, $REQUEST_URL not found"
   exit 1
 fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
-link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REPO_URL} -I | grep -i link: || true)
+link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
 echo $link_header
 if [[ -z $link_header ]]; then
   page_number=1
-  page_url=$REPO_URL
+  page_url=$REQUEST_URL
   ADD_PG_NUM=false
 else
   # Retrieve API link for repo
@@ -81,6 +93,10 @@ else
   # Retrieve max page number
   page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d ">" -f 1)
 fi
+
+echo $link_header
+
+exit 0
 
 # For each page...
 for i in $(seq $page_number); do
