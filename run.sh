@@ -88,7 +88,7 @@ fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
 link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
-echo $link_header
+# <echo $link_header
 
 if [[ -z $link_header ]]; then
   page_number=1
@@ -117,7 +117,7 @@ for i in $(seq $page_number); do
     # Retrieve all repositories names
     if [[ $ADD_PG_NUM == "true" ]]; then
       repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
-    elseparseQueryString
+    else
       repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].name')
     fi
       # For each batch of repositories name...
