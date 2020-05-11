@@ -77,7 +77,7 @@ if [[ ! -z $GH_ORGFOLLOW ]]; then
   echo "Looking for $GH_ORGFOLLOW users"
 fi
 
-REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=5   #${resultsPerPage}
+REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}   #${resultsPerPage}
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
 
@@ -104,9 +104,9 @@ else
   page_url=${page_url::-1}
   ADD_PG_NUM=true
   # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
-  # Retrieve max page number
+  # parse link:
   link_header=$(echo $link_header | cut -d "," -f 2 | cut -d ";" -f 1)
-
+  # Retrieve max page number
   page_number=$(parseQueryString ${link_header} page)
 fi
 
@@ -117,7 +117,7 @@ for i in $(seq $page_number); do
     # Retrieve all repositories names
     if [[ $ADD_PG_NUM == "true" ]]; then
       repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
-    else
+    elseparseQueryString
       repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].name')
     fi
       # For each batch of repositories name...
