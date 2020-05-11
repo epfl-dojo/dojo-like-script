@@ -13,13 +13,17 @@ A script to like all repo from a user or an organisation on GitHub.
 ## Script options
   - Display help: `./run.sh --help`
   - You can specify an user with:
-     - `./run.sh --user=username` 
-     - `./run.sh -u=username` 
+     - `./run.sh --user=username`
+     - `./run.sh -u=username`
   - You can specify an organisation with:
-     - `./run.sh --organisation=orgname` 
-     - `./run.sh --organization=orgname` 
-     - `./run.sh --org=orgname` 
-     - `./run.sh -o=orgname` 
+     - `./run.sh --organisation=orgname`
+     - `./run.sh --organization=orgname`
+     - `./run.sh --org=orgname`
+     - `./run.sh -o=orgname`
+  - You can specify organisation members to follow with:
+     - `./run.sh --follow-users-from-org=orgname`
+     - `./run.sh -fufo=orgname`
+
 
 
 ## Links
