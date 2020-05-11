@@ -70,7 +70,7 @@ if [[ ! -z $GH_ORGFOLLOW ]]; then
   echo "Looking for $GH_ORGFOLLOW users"
 fi
 
-REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}
+REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=5   #${resultsPerPage}
 
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
@@ -98,7 +98,7 @@ else
   ADD_PG_NUM=true
   # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
   # Retrieve max page number
-  page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d ">" -f 1)
+  page_number=$(echo $link_header | cut -d "," -f 2 | cut -d "=" -f 2 | cut -d "&" -f 1)
 
   echo $page_number
 
@@ -149,3 +149,11 @@ for i in $(seq $page_number); do
         done
     fi
 done
+
+
+
+#https://api.github.com/organizations/24317326/repos?page=2
+
+#https://api.github.com/organizations/24317326/repos?per_page=5&page=2
+
+#https://api.github.com/organizations/24317326/repos?per_page=5&page=
