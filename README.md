@@ -1,12 +1,15 @@
 # dojo-like-script
 
-A script to like all repo from a user or an organisation on GitHub.
+A script to like all repo from a user or an organisation, or follow all users
+from an organisation on GitHub.
 
 
 ## Usage
 
   1. Generate an [access token](https://github.com/settings/tokens)
-  1. Export your GHTOKEN env var
+     * Scope: **repo**
+     * Scope: **user** 
+  1. Export the GHTOKEN env var (`export GHTOKEN=yourGitHubAccessToken`)
   1. Run the script with `./run.sh` (the default org is [epfl-dojo](https://github.com/epfl-dojo))
 
 
@@ -23,7 +26,6 @@ A script to like all repo from a user or an organisation on GitHub.
   - You can specify organisation members to follow with:
      - `./run.sh --follow-users-from-org=orgname`
      - `./run.sh -fufo=orgname`
-
 
 
 ## Links
