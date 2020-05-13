@@ -11,6 +11,8 @@ if [ -e $GHTOKEN ]; then
   exit 1
 fi
 
+RESULTSPERPAGE=100
+
 # Print the script usage
 function usage {
   echo "Usage: ./run.sh"
@@ -76,7 +78,7 @@ if [[ ! -z $GH_ORGFOLLOW ]]; then
   echo "Looking for $GH_ORGFOLLOW users"
 fi
 
-REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=1   #${resultsPerPage}
+REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
 
