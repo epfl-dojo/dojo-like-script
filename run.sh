@@ -18,8 +18,12 @@ function usage {
   echo "Usage: ./run.sh"
   echo "  ./run.sh --organisation=epfl-dojo"
   echo "  ./run.sh --user=ponsfrilus"
+  echo "  ./run.sh --follow-users-from-org=epfl-dojo"
   echo "Note that you can use -o or -u for short hand."
   echo "This script will need bash > 4.2"
+  echo ""
+  echo "Be sure that your GitHub Token has the scope 'repo' and 'user'."
+  echo ""
   exit 0
 }
 
@@ -40,7 +44,7 @@ for i in "$@"; do
       GH_USER="${i#*=}"
       shift # past argument=value
     ;;
-    -fufo=*|--follow-users-from-org=*)
+    -fu=*|-fufo=*|--follow-users-from-org=*)
       GH_ORGFOLLOW="${i#*=}"
       shift # past argument=value
     ;;
@@ -58,7 +62,6 @@ if [[ -z $GH_ORG && -z $GH_USER && -z $GH_ORGFOLLOW ]]; then
   # usage
   GH_ORG=epfl-dojo
 fi
-
 if [[ ! -z $GH_ORG ]]; then
   OrgsOrUsers='orgs'
   MembersOrRepo='repos'
@@ -90,7 +93,6 @@ fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
 link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
-
 if [[ -z $link_header ]]; then
   page_number=1
   page_url=$REQUEST_URL
