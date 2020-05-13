@@ -79,9 +79,10 @@ if [[ ! -z $GH_ORGFOLLOW ]]; then
 fi
 
 REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
+echo "Querying ${REQUEST_URL}"
+
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
-
 if [[ "$test_url" == "\"Not Found\"" ]]; then
   echo "Sorry, $REQUEST_URL not found"
   exit 1
@@ -89,7 +90,6 @@ fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
 link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
-# <echo $link_header
 
 if [[ -z $link_header ]]; then
   page_number=1
@@ -105,7 +105,6 @@ else
   ADD_PG_NUM=true
   # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
   # parse link:
-  # link_header=$(echo $link_header | cut -d "," -f 2 | cut -d ";" -f 1)
   link_header=$(echo $link_header | cut -d "," -f 2)
   # Retrieve max page number
   page_number=$(parseQueryString "${link_header}" page)
@@ -156,11 +155,3 @@ for i in $(seq $page_number); do
     done
   fi
 done
-
-
-
-#https://api.github.com/organizations/24317326/repos?page=2
-
-#https://api.github.com/organizations/24317326/repos?per_page=5&page=2
-
-#https://api.github.com/organizations/24317326/repos?per_page=5&page=
