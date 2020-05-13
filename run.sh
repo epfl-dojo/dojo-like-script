@@ -113,45 +113,38 @@ fi
 
 # For each page...
 for i in $(seq $page_number); do
-  if [[ $MembersOrRepo == 'repos' ]]; then
-    # Retrieve all repositories names
-    if [[ $ADD_PG_NUM == "true" ]]; then
-      repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
-    else
-      repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].name')
-    fi
-    # For each batch of repositories name...
-    for repo_name in $repositories; do
-      # Thanks to https://stackoverflow.com/a/9733456
-      temp="${repo_name%\"}"
-      clean_name="${temp#\"}"
-      request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
-      # echo $request
-      if [[ $request > 200 && $request < 300 ]]; then
-        echo "$repo_name is now stargazed!!!"
-      else
-        echo "Failed to stargaze $repo_name"
-      fi
-    done
+  
+  # Retrieve all repositories names
+  if [[ $ADD_PG_NUM == "true" ]]; then
+    API_URL=${page_url}${i}
   else
-    if [[ $ADD_PG_NUM == "true" ]]; then
-      members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].login')
-    else
-      members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].login')
-    fi
-    # For each batch of members name...
-    for user_name in $members; do
-      # Thanks to https://stackoverflow.com/a/9733456
-      temp="${user_name%\"}"
-      clean_name="${temp#\"}"
-      request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/following/${clean_name});
-      # echo $request
-      # echo $clean_name
-      if [[ $request > 200 && $request < 300 ]]; then
-        echo "You are now following https://github.com/$clean_name"
-      else
-        echo "Failed to follow https://github.com/$clean_name"
-      fi
-    done
+    API_URL=${page_url}
   fi
+
+  if [[ $MembersOrRepo == 'repos' ]]; then
+    datas=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_URL} | jq '.[].name')
+  else
+    datas=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_URL} | jq '.[].login')
+  fi
+
+  # For each batch of repositories name...
+  for data in $datas; do
+    # Thanks to https://stackoverflow.com/a/9733456
+    temp="${data%\"}"
+    clean_name="${temp#\"}"
+    if [[ $MembersOrRepo == 'repos' ]]; then
+      API_PUT_URL=https://api.github.com/user/starred/${TARGET}/${clean_name}
+    else
+      API_PUT_URL=https://api.github.com/user/following/${clean_name}
+    fi
+
+    # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
+    request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
+    if [[ $request > 200 && $request < 300 ]]; then
+      echo "$data is now stargazed!!!"
+    else
+      echo "Failed to stargaze $data"
+    fi
+  done
+
 done
