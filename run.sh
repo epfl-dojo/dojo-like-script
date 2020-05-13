@@ -31,26 +31,26 @@ function parseQueryString {
 
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 for i in "$@"; do
-case $i in
-  -o=*|--org=*|--organisation=*|--organization=*)
-  GH_ORG="${i#*=}"
-  shift # past argument=value
-  ;;
-  -u=*|--user=*)
-  GH_USER="${i#*=}"
-  shift # past argument=value
-  ;;
-  -fufo=*|--follow-users-from-org=*)
-  GH_ORGFOLLOW="${i#*=}"
-  shift # past argument=value
-  ;;
-  -h|--help)
-  usage
-  ;;
-  *)
-    # unknown option
-  ;;
-esac
+  case $i in
+    -o=*|--org=*|--organisation=*|--organization=*)
+      GH_ORG="${i#*=}"
+      shift # past argument=value
+    ;;
+    -u=*|--user=*)
+      GH_USER="${i#*=}"
+      shift # past argument=value
+    ;;
+    -fufo=*|--follow-users-from-org=*)
+      GH_ORGFOLLOW="${i#*=}"
+      shift # past argument=value
+    ;;
+    -h|--help)
+      usage
+    ;;
+    *)
+      # unknown option
+    ;;
+  esac
 done
 
 # Ensure one of the options is set
@@ -121,40 +121,40 @@ for i in $(seq $page_number); do
     else
       repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].name')
     fi
-      # For each batch of repositories name...
-      for repo_name in $repositories; do
-        # Thanks to https://stackoverflow.com/a/9733456
-        temp="${repo_name%\"}"
-        clean_name="${temp#\"}"
-        request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
-        # echo $request
-        if [[ $request > 200 && $request < 300 ]]; then
-          echo "$repo_name is now stargazed!!!"
-        else
-          echo "Failed to stargaze $repo_name"
-        fi
-      done
-    else
-      if [[ $ADD_PG_NUM == "true" ]]; then
-        members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].login')
+    # For each batch of repositories name...
+    for repo_name in $repositories; do
+      # Thanks to https://stackoverflow.com/a/9733456
+      temp="${repo_name%\"}"
+      clean_name="${temp#\"}"
+      request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
+      # echo $request
+      if [[ $request > 200 && $request < 300 ]]; then
+        echo "$repo_name is now stargazed!!!"
       else
-        members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].login')
+        echo "Failed to stargaze $repo_name"
       fi
-        # For each batch of members name...
-        for user_name in $members; do
-          # Thanks to https://stackoverflow.com/a/9733456
-          temp="${user_name%\"}"
-          clean_name="${temp#\"}"
-          request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/following/${clean_name});
-          # echo $request
-          # echo $clean_name
-          if [[ $request > 200 && $request < 300 ]]; then
-            echo "You are now following https://github.com/$clean_name"
-          else
-            echo "Failed to follow https://github.com/$clean_name"
-          fi
-        done
+    done
+  else
+    if [[ $ADD_PG_NUM == "true" ]]; then
+      members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].login')
+    else
+      members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].login')
     fi
+    # For each batch of members name...
+    for user_name in $members; do
+      # Thanks to https://stackoverflow.com/a/9733456
+      temp="${user_name%\"}"
+      clean_name="${temp#\"}"
+      request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/following/${clean_name});
+      # echo $request
+      # echo $clean_name
+      if [[ $request > 200 && $request < 300 ]]; then
+        echo "You are now following https://github.com/$clean_name"
+      else
+        echo "Failed to follow https://github.com/$clean_name"
+      fi
+    done
+  fi
 done
 
 
