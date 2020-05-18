@@ -2,12 +2,17 @@
 
 # set -e -x
 
+if ! [[ "$(command -v jq)" ]]; then
+   echo -e "\e[31mWARNING:\e[39m jq is not installed";
+   echo -e "\e[34mCOMMAND:\e[39m sudo apt install jq";
+   exit 1;
+fi
+
 # Ensure that GHTOKEN is defined
 if [ -e $GHTOKEN ]; then
-  echo "FAIL: GHTOKEN not found"
-  echo "Please generate a GitHub API token from https://github.com/settings/tokens"
-  echo "and export it: "
-  echo "export GHTOKEN=yourkey"
+  echo -e "\e[31mFAIL:\e[39m GHTOKEN not found"
+  echo -e "Please generate a GitHub API token from https://github.com/settings/tokens and export it: "
+  echo -e "\e[34mCOMMAND:\e[39m export GHTOKEN=yourkey"
   exit 1
 fi
 
