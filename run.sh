@@ -145,15 +145,12 @@ for i in $(seq $page_number); do
       API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
 
-    echo $INFO_URL$clean_name
-
     # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
     if [[ $request > 200 && $request < 300 ]]; then
-      echo -e "\e[32m✓ \e[39m \e]8;;$INFO_URL$clean_name\e$data\e]8;;\e ${SENTENCE}"
+      echo -e "\e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
     else
-      echo -e "\e[31m✗ \e[39m \e]8;;$INFO_URL$clean_name\e$data\e]8;;\e not ${SENTENCE}"
+      echo -e "\e[31m✗\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
     fi
   done
-
 done
