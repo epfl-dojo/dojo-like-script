@@ -13,6 +13,7 @@ fi
 
 RESULTSPERPAGE=100
 SENTENCE="stargazed"
+INFO_URL="https://github.com/"
 
 # Print the script usage
 function usage {
@@ -39,10 +40,12 @@ for i in "$@"; do
   case $i in
     -o=*|--org=*|--organisation=*|--organization=*)
       GH_ORG="${i#*=}"
+      INFO_URL+="$GH_ORG/"
       shift # past argument=value
     ;;
     -u=*|--user=*)
       GH_USER="${i#*=}"
+      INFO_URL+="$GH_USER/"
       shift # past argument=value
     ;;
     -fu=*|-fufo=*|--follow-users-from-org=*)
@@ -142,12 +145,14 @@ for i in $(seq $page_number); do
       API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
 
+    echo $INFO_URL$clean_name
+
     # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
     if [[ $request > 200 && $request < 300 ]]; then
-      echo -e "\e[32m✓ \e[39m $data ${SENTENCE}"
+      echo -e "\e[32m✓ \e[39m \e]8;;$INFO_URL$clean_name\e$data\e]8;;\e ${SENTENCE}"
     else
-      echo -e "\e[31m✗ \e[39m $data not ${SENTENCE}"
+      echo -e "\e[31m✗ \e[39m \e]8;;$INFO_URL$clean_name\e$data\e]8;;\e not ${SENTENCE}"
     fi
   done
 
