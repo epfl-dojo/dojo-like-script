@@ -4,6 +4,13 @@ A script to like all repo from a user or an organisation, or follow all users
 from an organisation on GitHub.
 
 
+## Requirements
+
+  * Bash > 4.2
+  * Grep with perl regexp (PCRE)
+  * jq
+
+
 ## Usage
 
   1. Generate an [access token](https://github.com/settings/tokens)
@@ -11,6 +18,11 @@ from an organisation on GitHub.
      * Scope: **user** 
   1. Export the GHTOKEN env var (`export GHTOKEN=yourGitHubAccessToken`)
   1. Run the script with `./run.sh` (the default org is [epfl-dojo](https://github.com/epfl-dojo))
+
+
+## GIF
+
+![Demo GIF](./dojolikescript.gif "Demo GIF")
 
 
 ## Script options
