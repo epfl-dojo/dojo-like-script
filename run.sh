@@ -1,5 +1,6 @@
 #!/bin/bash
 
+VERSION="0.0.1"
 # set -e -x
 
 if ! [[ "$(command -v jq)" ]]; then
@@ -20,8 +21,20 @@ RESULTSPERPAGE=100
 SENTENCE="stargazed"
 INFO_URL="https://github.com/"
 
+function header {
+echo -e "\e[32m-----------------------------------------------------------"
+echo -e " ___       _       _    _ _         ___         _      _   "
+echo -e "|   \ ___ (_)___  | |  (_) |_____  / __| __ _ _(_)_ __| |_ "
+echo -e "| |) / _ \| / _ \ | |__| | / / -_) \__ \/ _| '_| | '_ \  _|"
+echo -e "|___/\___// \___/ |____|_|_\_\___| |___/\__|_| |_| .__/\__|"
+echo -e "        |__/                         \e[5m\e[37mver: $VERSION\e[25m\e[32m   |_|       "
+echo -e "   Source: \e[39mhttps://github.com/epfl-dojo/dojo-like-script\e[32m"
+echo -e "-----------------------------------------------------------\e[39m"
+}
+
 # Print the script usage
 function usage {
+  header
   echo "Usage: ./run.sh"
   echo "  ./run.sh --organisation=epfl-dojo"
   echo "  ./run.sh --user=ponsfrilus"
@@ -66,6 +79,8 @@ for i in "$@"; do
     ;;
   esac
 done
+
+header
 
 # Ensure one of the options is set
 if [[ -z $GH_ORG && -z $GH_USER && -z $GH_ORGFOLLOW ]]; then
