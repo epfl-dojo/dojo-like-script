@@ -11,13 +11,20 @@ if [ -e $GHTOKEN ]; then
   exit 1
 fi
 
+RESULTSPERPAGE=100
+SENTENCE="stargaze"
+
 # Print the script usage
 function usage {
   echo "Usage: ./run.sh"
   echo "  ./run.sh --organisation=epfl-dojo"
   echo "  ./run.sh --user=ponsfrilus"
+  echo "  ./run.sh --follow-users-from-org=epfl-dojo"
   echo "Note that you can use -o or -u for short hand."
   echo "This script will need bash > 4.2"
+  echo ""
+  echo "Be sure that your GitHub Token has the scope 'repo' and 'user'."
+  echo ""
   exit 0
 }
 
@@ -29,26 +36,27 @@ function parseQueryString {
 
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 for i in "$@"; do
-case $i in
-  -o=*|--org=*|--organisation=*|--organization=*)
-  GH_ORG="${i#*=}"
-  shift # past argument=value
-  ;;
-  -u=*|--user=*)
-  GH_USER="${i#*=}"
-  shift # past argument=value
-  ;;
-  -fufo=*|--follow-users-from-org=*)
-  GH_ORGFOLLOW="${i#*=}"
-  shift # past argument=value
-  ;;
-  -h|--help)
-  usage
-  ;;
-  *)
-    # unknown option
-  ;;
-esac
+  case $i in
+    -o=*|--org=*|--organisation=*|--organization=*)
+      GH_ORG="${i#*=}"
+      shift # past argument=value
+    ;;
+    -u=*|--user=*)
+      GH_USER="${i#*=}"
+      shift # past argument=value
+    ;;
+    -fu=*|-fufo=*|--follow-users-from-org=*)
+      GH_ORGFOLLOW="${i#*=}"
+      SENTENCE="follow"
+      shift # past argument=value
+    ;;
+    -h|--help)
+      usage
+    ;;
+    *)
+      # unknown option
+    ;;
+  esac
 done
 
 # Ensure one of the options is set
@@ -56,7 +64,6 @@ if [[ -z $GH_ORG && -z $GH_USER && -z $GH_ORGFOLLOW ]]; then
   # usage
   GH_ORG=epfl-dojo
 fi
-
 if [[ ! -z $GH_ORG ]]; then
   OrgsOrUsers='orgs'
   MembersOrRepo='repos'
@@ -76,10 +83,11 @@ if [[ ! -z $GH_ORGFOLLOW ]]; then
   echo "Looking for $GH_ORGFOLLOW users"
 fi
 
-REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=1   #${resultsPerPage}
+REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
+echo "Querying ${REQUEST_URL}"
+
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
-
 if [[ "$test_url" == "\"Not Found\"" ]]; then
   echo "Sorry, $REQUEST_URL not found"
   exit 1
@@ -87,8 +95,6 @@ fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
 link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
-# <echo $link_header
-
 if [[ -z $link_header ]]; then
   page_number=1
   page_url=$REQUEST_URL
@@ -103,7 +109,6 @@ else
   ADD_PG_NUM=true
   # At this point, we should have an URL like e.g. "https://api.github.com/organizations/14234715/repos?page="
   # parse link:
-  # link_header=$(echo $link_header | cut -d "," -f 2 | cut -d ";" -f 1)
   link_header=$(echo $link_header | cut -d "," -f 2)
   # Retrieve max page number
   page_number=$(parseQueryString "${link_header}" page)
@@ -112,53 +117,38 @@ fi
 
 # For each page...
 for i in $(seq $page_number); do
+
+  # Retrieve all repositories names
+  if [[ $ADD_PG_NUM == "true" ]]; then
+    API_URL=${page_url}${i}
+  else
+    API_URL=${page_url}
+  fi
+
   if [[ $MembersOrRepo == 'repos' ]]; then
-    # Retrieve all repositories names
-    if [[ $ADD_PG_NUM == "true" ]]; then
-      repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].name')
+    datas=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_URL} | jq '.[].name')
+  else
+    datas=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_URL} | jq '.[].login')
+  fi
+
+  # For each batch of repositories name...
+  for data in $datas; do
+    # Thanks to https://stackoverflow.com/a/9733456
+    temp="${data%\"}"
+    clean_name="${temp#\"}"
+    if [[ $MembersOrRepo == 'repos' ]]; then
+      API_PUT_URL=https://api.github.com/user/starred/${TARGET}/${clean_name}
     else
-      repositories=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].name')
+      API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
-      # For each batch of repositories name...
-      for repo_name in $repositories; do
-        # Thanks to https://stackoverflow.com/a/9733456
-        temp="${repo_name%\"}"
-        clean_name="${temp#\"}"
-        request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/starred/${TARGET}/${clean_name});
-        # echo $request
-        if [[ $request > 200 && $request < 300 ]]; then
-          echo "$repo_name is now stargazed!!!"
-        else
-          echo "Failed to stargaze $repo_name"
-        fi
-      done
+
+    # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
+    request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
+    if [[ $request > 200 && $request < 300 ]]; then
+      echo "SUCESS : $data - (${SENTENCE}) | ✓"
     else
-      if [[ $ADD_PG_NUM == "true" ]]; then
-        members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url}${i} | jq '.[].login')
-      else
-        members=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${page_url} | jq '.[].login')
-      fi
-        # For each batch of members name...
-        for user_name in $members; do
-          # Thanks to https://stackoverflow.com/a/9733456
-          temp="${user_name%\"}"
-          clean_name="${temp#\"}"
-          request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s https://api.github.com/user/following/${clean_name});
-          # echo $request
-          # echo $clean_name
-          if [[ $request > 200 && $request < 300 ]]; then
-            echo "You are now following https://github.com/$clean_name"
-          else
-            echo "Failed to follow https://github.com/$clean_name"
-          fi
-        done
+      echo "FAIL   : $data - (${SENTENCE}) | ✗"
     fi
+  done
+
 done
-
-
-
-#https://api.github.com/organizations/24317326/repos?page=2
-
-#https://api.github.com/organizations/24317326/repos?per_page=5&page=2
-
-#https://api.github.com/organizations/24317326/repos?per_page=5&page=
