@@ -23,7 +23,7 @@ echo -e "|   \ ___ (_)___  | |  (_) |_____  / __| __ _ _(_)_ __| |_ "
 echo -e "| |) / _ \| / _ \ | |__| | / / -_) \__ \/ _| '_| | '_ \  _|"
 echo -e "|___/\___// \___/ |____|_|_\_\___| |___/\__|_| |_| .__/\__|"
 echo -e "        |__/                         \e[5m\e[37mver: $VERSION\e[25m\e[32m   |_|       "
-echo -e "   \e[1mSource:\e[21m \e[39mhttps://github.com/epfl-dojo/dojo-like-script\e[32m"
+echo -e "   Source: \e[39mhttps://github.com/epfl-dojo/dojo-like-script\e[32m"
 echo -e "-----------------------------------------------------------\e[39m"
 }
 
