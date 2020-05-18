@@ -12,6 +12,7 @@ if [ -e $GHTOKEN ]; then
 fi
 
 RESULTSPERPAGE=100
+SENTENCE="stargaze"
 
 # Print the script usage
 function usage {
@@ -46,6 +47,7 @@ for i in "$@"; do
     ;;
     -fu=*|-fufo=*|--follow-users-from-org=*)
       GH_ORGFOLLOW="${i#*=}"
+      SENTENCE="follow"
       shift # past argument=value
     ;;
     -h|--help)
@@ -115,7 +117,7 @@ fi
 
 # For each page...
 for i in $(seq $page_number); do
-  
+
   # Retrieve all repositories names
   if [[ $ADD_PG_NUM == "true" ]]; then
     API_URL=${page_url}${i}
@@ -143,9 +145,9 @@ for i in $(seq $page_number); do
     # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
     if [[ $request > 200 && $request < 300 ]]; then
-      echo "$data is now stargazed!!!"
+      echo "SUCESS : $data - (${SENTENCE}) | ✓"
     else
-      echo "Failed to stargaze $data"
+      echo "FAIL   : $data - (${SENTENCE}) | ✗"
     fi
   done
 
