@@ -12,7 +12,7 @@ if [ -e $GHTOKEN ]; then
 fi
 
 RESULTSPERPAGE=100
-SENTENCE="stargaze"
+SENTENCE="stargazed"
 
 # Print the script usage
 function usage {
@@ -47,7 +47,7 @@ for i in "$@"; do
     ;;
     -fu=*|-fufo=*|--follow-users-from-org=*)
       GH_ORGFOLLOW="${i#*=}"
-      SENTENCE="follow"
+      SENTENCE="followed"
       shift # past argument=value
     ;;
     -h|--help)
@@ -145,9 +145,9 @@ for i in $(seq $page_number); do
     # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
     if [[ $request > 200 && $request < 300 ]]; then
-      echo "SUCESS : $data - (${SENTENCE}) | ✓"
+      echo -e "\e[32m✓ \e[39m $data ${SENTENCE}"
     else
-      echo "FAIL   : $data - (${SENTENCE}) | ✗"
+      echo -e "\e[31m✗ \e[39m $data not ${SENTENCE}"
     fi
   done
 
