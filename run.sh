@@ -3,15 +3,15 @@
 VERSION="0.0.2"
 RESULTSPERPAGE=100
 SENTENCE="stargazed"
+SECONDS=0
 
-set -e -x
+# set -e -x
 
 if ! [[ "$(command -v jq)" ]]; then
    echo -e "\e[31mWARNING:\e[39m jq is not installed";
    echo -e "\e[34mCOMMAND:\e[39m sudo apt install jq";
    exit 1;
 fi
-
 
 function header {
   echo -e "\e[32m-----------------------------------------------------------"
@@ -102,7 +102,6 @@ header
 
 # Ensure one of the options is set
 if [[ -z $ORG && -z $GIT_USER && -z $ORGFOLLOW ]]; then
-  # Define default org as epfl-dojo
   ORG=epfl-dojo
   WEBSITE="github"
 fi
@@ -126,7 +125,7 @@ if [[ ! -z $ORGFOLLOW ]]; then
 fi
 
 REQUEST_URL=https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
-echo "Querying ${REQUEST_URL}"
+#echo "Querying ${REQUEST_URL}"
 
 # Test if user or org exists
 test_url=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
@@ -184,12 +183,19 @@ for i in $(seq $page_number); do
       API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
 
+    REPO_NUMBER=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s "https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}" | jq '.public_repos')
+
     # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL}
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL});
     if [[ $request > 200 && $request < 300 ]]; then
-      echo -e "\e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
+      LIKED_REPOS=$(( $LIKED_REPOS+1 ))
+      PERCENTAGE=$(echo "scale=2;100*$LIKED_REPOS/$REPO_NUMBER" | bc)
+
+      echo -ne "\r \033[K[${LIKED_REPOS}/${REPO_NUMBER} | ${PERCENTAGE}%] \e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
     else
       echo -e "\e[31m✗\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
     fi
   done
 done
+
+echo -e "\n\e[32mRuntime: ${SECONDS}s"
