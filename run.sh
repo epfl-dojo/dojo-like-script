@@ -2,7 +2,7 @@
 
 VERSION="0.0.2"
 
-# set -e -x
+set -e -x
 
 if ! [[ "$(command -v jq)" ]]; then
    echo -e "\e[31mWARNING:\e[39m jq is not installed";
@@ -45,11 +45,11 @@ function parseQueryString {
   echo $(echo $1 | grep -oP "(\?|&)${2}=\K([0-9]+)")
 }
 
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 for i in "$@"; do
   case $i in
     -gh|--github)
       WEBSITE="github"
-
       # Ensure that GHTOKEN is defined
       if [ -e $GHTOKEN ]; then
         echo -e "\e[31mFAIL:\e[39m GHTOKEN not found"
@@ -57,10 +57,11 @@ for i in "$@"; do
         echo -e "\e[34mCOMMAND:\e[39m export GHTOKEN=yourkey"
         exit 1
       fi
+      TOKEN=$GHTOKEN
+      TOKEN_STRING="Authorization: token"
     ;;
     -gl|--gitlab)
       WEBSITE="gitlab"
-
       # Ensure that GLTOKEN is defined
       if [ -e $GLTOKEN ]; then
         echo -e "\e[31mFAIL:\e[39m GLTOKEN not found"
@@ -68,29 +69,17 @@ for i in "$@"; do
         echo -e "\e[34mCOMMAND:\e[39m export GLTOKEN=yourkey"
         exit 1
       fi
+      TOKEN=$GLTOKEN
+      TOKEN_STRING="PRIVATE-TOKEN:"
     ;;
-    -h|--help)
-      usage
-    ;;
-    *)
-      # unknown option
-    ;;
-  esac
-done
-
-INFO_URL="https://${WEBSITE}.com/"
-
-# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
-for i in "$@"; do
-  case $i in
     -o=*|--org=*|--organisation=*|--organization=*)
       ORG="${i#*=}"
       INFO_URL+="$ORG/"
       shift # past argument=value
     ;;
     -u=*|--user=*)
-      USER="${i#*=}"
-      INFO_URL+="$USER/"
+      GIT_USER="${i#*=}"
+      INFO_URL+="$GIT_USER/"
       shift # past argument=value
     ;;
     -fu=*|-fufo=*|--follow-users-from-org=*)
@@ -107,10 +96,12 @@ for i in "$@"; do
   esac
 done
 
+INFO_URL="https://${WEBSITE}.com/"
+
 header
 
 # Ensure one of the options is set
-if [[ -z $ORG && -z $USER && -z $ORGFOLLOW ]]; then
+if [[ -z $ORG && -z $GIT_USER && -z $ORGFOLLOW ]]; then
   # usage
   ORG=epfl-dojo
 fi
@@ -120,11 +111,11 @@ if [[ ! -z $ORG ]]; then
   TARGET=$ORG
   echo "Looking for $ORG repositories"
 fi
-if [[ ! -z $USER ]]; then
+if [[ ! -z $GIT_USER ]]; then
   OrgsOrUsers='users'
   MembersOrRepo='repos'
-  TARGET=$USER
-  echo "Looking for $USER repositories"
+  TARGET=$GIT_USER
+  echo "Looking for $GIT_USER repositories"
 fi
 if [[ ! -z $ORGFOLLOW ]]; then
   OrgsOrUsers='orgs'
@@ -137,14 +128,14 @@ REQUEST_URL=https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}
 echo "Querying ${REQUEST_URL}"
 
 # Test if user or org exists
-test_url=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
+test_url=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${REQUEST_URL} | jq '.message' 2>/dev/null || true)
 if [[ "$test_url" == "\"Not Found\"" ]]; then
   echo "Sorry, $REQUEST_URL not found"
   exit 1
 fi
 
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
-link_header=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
+link_header=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
 if [[ -z $link_header ]]; then
   page_number=1
   page_url=$REQUEST_URL
@@ -176,9 +167,9 @@ for i in $(seq $page_number); do
   fi
 
   if [[ $MembersOrRepo == 'repos' ]]; then
-    datas=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_URL} | jq '.[].name')
+    datas=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_URL} | jq '.[].name')
   else
-    datas=$(curl -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_URL} | jq '.[].login')
+    datas=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_URL} | jq '.[].login')
   fi
 
   # For each batch of repositories name...
@@ -192,8 +183,8 @@ for i in $(seq $page_number); do
       API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
 
-    # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL}
-    request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json" -H "Authorization: token ${GHTOKEN}" -s ${API_PUT_URL});
+    # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL}
+    request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL});
     if [[ $request > 200 && $request < 300 ]]; then
       echo -e "\e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
     else
