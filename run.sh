@@ -10,17 +10,8 @@ if ! [[ "$(command -v jq)" ]]; then
    exit 1;
 fi
 
-# Ensure that GHTOKEN is defined
-if [ -e $GHTOKEN ]; then
-  echo -e "\e[31mFAIL:\e[39m GHTOKEN not found"
-  echo -e "Please generate a GitHub API token from https://github.com/settings/tokens and export it: "
-  echo -e "\e[34mCOMMAND:\e[39m export GHTOKEN=yourkey"
-  exit 1
-fi
-
 RESULTSPERPAGE=100
 SENTENCE="stargazed"
-INFO_URL="https://github.com/"
 
 function header {
 echo -e "\e[32m-----------------------------------------------------------"
@@ -54,21 +45,56 @@ function parseQueryString {
   echo $(echo $1 | grep -oP "(\?|&)${2}=\K([0-9]+)")
 }
 
+for i in "$@"; do
+  case $i in
+    -gh|--github)
+      WEBSITE="github"
+
+      # Ensure that GHTOKEN is defined
+      if [ -e $GHTOKEN ]; then
+        echo -e "\e[31mFAIL:\e[39m GHTOKEN not found"
+        echo -e "Please generate a GitHub API token from https://github.com/settings/tokens and export it: "
+        echo -e "\e[34mCOMMAND:\e[39m export GHTOKEN=yourkey"
+        exit 1
+      fi
+    ;;
+    -gl|--gitlab)
+      WEBSITE="gitlab"
+
+      # Ensure that GLTOKEN is defined
+      if [ -e $GLTOKEN ]; then
+        echo -e "\e[31mFAIL:\e[39m GLTOKEN not found"
+        echo -e "Please generate a GitLab API token from https://gitlab.com/profile/personal_access_tokens and export it: "
+        echo -e "\e[34mCOMMAND:\e[39m export GLTOKEN=yourkey"
+        exit 1
+      fi
+    ;;
+    -h|--help)
+      usage
+    ;;
+    *)
+      # unknown option
+    ;;
+  esac
+done
+
+INFO_URL="https://${WEBSITE}.com/"
+
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 for i in "$@"; do
   case $i in
     -o=*|--org=*|--organisation=*|--organization=*)
-      GH_ORG="${i#*=}"
-      INFO_URL+="$GH_ORG/"
+      ORG="${i#*=}"
+      INFO_URL+="$ORG/"
       shift # past argument=value
     ;;
     -u=*|--user=*)
-      GH_USER="${i#*=}"
-      INFO_URL+="$GH_USER/"
+      USER="${i#*=}"
+      INFO_URL+="$USER/"
       shift # past argument=value
     ;;
     -fu=*|-fufo=*|--follow-users-from-org=*)
-      GH_ORGFOLLOW="${i#*=}"
+      ORGFOLLOW="${i#*=}"
       SENTENCE="followed"
       shift # past argument=value
     ;;
@@ -84,30 +110,30 @@ done
 header
 
 # Ensure one of the options is set
-if [[ -z $GH_ORG && -z $GH_USER && -z $GH_ORGFOLLOW ]]; then
+if [[ -z $ORG && -z $USER && -z $ORGFOLLOW ]]; then
   # usage
-  GH_ORG=epfl-dojo
+  ORG=epfl-dojo
 fi
-if [[ ! -z $GH_ORG ]]; then
+if [[ ! -z $ORG ]]; then
   OrgsOrUsers='orgs'
   MembersOrRepo='repos'
-  TARGET=$GH_ORG
-  echo "Looking for $GH_ORG repositories"
+  TARGET=$ORG
+  echo "Looking for $ORG repositories"
 fi
-if [[ ! -z $GH_USER ]]; then
+if [[ ! -z $USER ]]; then
   OrgsOrUsers='users'
   MembersOrRepo='repos'
-  TARGET=$GH_USER
-  echo "Looking for $GH_USER repositories"
+  TARGET=$USER
+  echo "Looking for $USER repositories"
 fi
-if [[ ! -z $GH_ORGFOLLOW ]]; then
+if [[ ! -z $ORGFOLLOW ]]; then
   OrgsOrUsers='orgs'
   MembersOrRepo='members'
-  TARGET=$GH_ORGFOLLOW
-  echo "Looking for $GH_ORGFOLLOW users"
+  TARGET=$ORGFOLLOW
+  echo "Looking for $ORGFOLLOW users"
 fi
 
-REQUEST_URL=https://api.github.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
+REQUEST_URL=https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
 echo "Querying ${REQUEST_URL}"
 
 # Test if user or org exists
