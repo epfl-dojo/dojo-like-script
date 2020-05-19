@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 VERSION="0.0.2"
+RESULTSPERPAGE=100
+SENTENCE="stargazed"
 
 set -e -x
 
@@ -10,8 +12,6 @@ if ! [[ "$(command -v jq)" ]]; then
    exit 1;
 fi
 
-RESULTSPERPAGE=100
-SENTENCE="stargazed"
 
 function header {
 echo -e "\e[32m-----------------------------------------------------------"
