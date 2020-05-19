@@ -102,8 +102,9 @@ header
 
 # Ensure one of the options is set
 if [[ -z $ORG && -z $GIT_USER && -z $ORGFOLLOW ]]; then
-  # usage
+  # Define default org as epfl-dojo
   ORG=epfl-dojo
+  WEBSITE="github"
 fi
 if [[ ! -z $ORG ]]; then
   OrgsOrUsers='orgs'
