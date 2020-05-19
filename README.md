@@ -6,9 +6,10 @@ from an organisation on GitHub.
 
 ## Requirements
 
-  * Bash > 4.2
-  * Grep with perl regexp (PCRE)
-  * jq
+  * [Bash](https://www.gnu.org/software/bash/) > 4.2
+  * [Grep](https://www.gnu.org/software/grep/) with perl regexp (PCRE)
+  * [jq](https://stedolan.github.io/jq/)
+  * The fancy stuff (links, blink) need some specific terminal. See [Hyperlinks in terminal emulators](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda).
 
 
 ## Usage
