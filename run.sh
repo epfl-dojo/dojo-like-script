@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# set -e -x
+
 VERSION="0.1.1"
 RESULTSPERPAGE=100
 SENTENCE="stargazed"
@@ -41,6 +43,15 @@ function usage {
 # Return 42
 function parseQueryString {
   echo $(echo $1 | grep -oP "(\?|&)${2}=\K([0-9]+)")
+}
+
+function doCurlRequest {
+  request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL});
+  if [[ $request > 200 && $request < 300 ]]; then
+    echo -ne "\r \033[K \e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
+  else
+    echo -e "\n \e[31m✗\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE} \n"
+  fi
 }
 
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
@@ -190,17 +201,9 @@ for i in $(seq $page_number); do
       API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
 
-    # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL}
-    request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL});
-    if [[ $request > 200 && $request < 300 ]]; then
-      LIKED_REPOS=$(( $LIKED_REPOS+1 ))
-      PERCENTAGE=$(echo "scale=2;100*$LIKED_REPOS/$REPO_NUMBER" | bc)
+    doCurlRequest &
 
-      echo -ne "\r \033[K[${LIKED_REPOS}/${REPO_NUMBER} | ${PERCENTAGE}%] \e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
-    else
-      echo -e "\e[31m✗\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
-    fi
   done
 done
-
-echo -e "\n\e[32mRuntime: ${SECONDS}s"
+wait
+echo -e "\n\e[32mRuntime: ${SECONDS}s for ${REPO_NUMBER} entries."
