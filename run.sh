@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
+<<<<<<< HEAD
 VERSION="0.1.0"
+=======
+VERSION="0.1.1"
+>>>>>>> 47dbb38b07330b331cd58dc0ad30ea5e58e35e2b
 RESULTSPERPAGE=100
 SENTENCE="stargazed"
 SECONDS=0
@@ -96,14 +100,27 @@ for i in "$@"; do
   esac
 done
 
+<<<<<<< HEAD
 INFO_URL="https://${WEBSITE}.com/"
 
+=======
+>>>>>>> 47dbb38b07330b331cd58dc0ad30ea5e58e35e2b
 header
 
 # Ensure one of the options is set
 if [[ -z $ORG && -z $GIT_USER && -z $ORGFOLLOW ]]; then
   ORG=epfl-dojo
+<<<<<<< HEAD
   WEBSITE="github"
+=======
+  TOKEN=$GHTOKEN
+  TOKEN_STRING="Authorization: token"
+fi
+if [[ -z $WEBSITE ]]; then
+  WEBSITE="github"
+  TOKEN=$GHTOKEN
+  TOKEN_STRING="Authorization: token"
+>>>>>>> 47dbb38b07330b331cd58dc0ad30ea5e58e35e2b
 fi
 if [[ ! -z $ORG ]]; then
   OrgsOrUsers='orgs'
@@ -124,6 +141,11 @@ if [[ ! -z $ORGFOLLOW ]]; then
   echo "Looking for $ORGFOLLOW users"
 fi
 
+<<<<<<< HEAD
+=======
+INFO_URL="https://${WEBSITE}.com/"
+
+>>>>>>> 47dbb38b07330b331cd58dc0ad30ea5e58e35e2b
 REQUEST_URL=https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
 #echo "Querying ${REQUEST_URL}"
 
