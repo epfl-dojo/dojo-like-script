@@ -2,7 +2,7 @@
 
 # set -e -x
 
-VERSION="0.1.1"
+VERSION="0.2.0"
 RESULTSPERPAGE=100
 SENTENCE="stargazed"
 SECONDS=0
