@@ -96,13 +96,15 @@ for i in "$@"; do
   esac
 done
 
-INFO_URL="https://${WEBSITE}.com/"
-
 header
 
 # Ensure one of the options is set
 if [[ -z $ORG && -z $GIT_USER && -z $ORGFOLLOW ]]; then
   ORG=epfl-dojo
+  TOKEN=$GHTOKEN
+  TOKEN_STRING="Authorization: token"
+fi
+if [[ -z $WEBSITE ]]; then
   WEBSITE="github"
   TOKEN=$GHTOKEN
   TOKEN_STRING="Authorization: token"
@@ -125,6 +127,8 @@ if [[ ! -z $ORGFOLLOW ]]; then
   TARGET=$ORGFOLLOW
   echo "Looking for $ORGFOLLOW users"
 fi
+
+INFO_URL="https://${WEBSITE}.com/"
 
 REQUEST_URL=https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}/${MembersOrRepo}?per_page=${RESULTSPERPAGE}
 #echo "Querying ${REQUEST_URL}"
