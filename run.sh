@@ -5,8 +5,6 @@ RESULTSPERPAGE=100
 SENTENCE="stargazed"
 SECONDS=0
 
-# set -e -x
-
 if ! [[ "$(command -v jq)" ]]; then
    echo -e "\e[31mWARNING:\e[39m jq is not installed";
    echo -e "\e[34mCOMMAND:\e[39m sudo apt install jq";
@@ -48,6 +46,9 @@ function parseQueryString {
 # https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 for i in "$@"; do
   case $i in
+    -d|--debug)
+      set -e -x
+    ;;
     -gh|--github)
       WEBSITE="github"
       # Ensure that GHTOKEN is defined
