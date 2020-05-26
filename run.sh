@@ -104,6 +104,8 @@ header
 if [[ -z $ORG && -z $GIT_USER && -z $ORGFOLLOW ]]; then
   ORG=epfl-dojo
   WEBSITE="github"
+  TOKEN=$GHTOKEN
+  TOKEN_STRING="Authorization: token"
 fi
 if [[ ! -z $ORG ]]; then
   OrgsOrUsers='orgs'
