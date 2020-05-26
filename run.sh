@@ -139,6 +139,8 @@ if [[ "$test_url" == "\"Not Found\"" ]]; then
   exit 1
 fi
 
+REPO_NUMBER=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s "https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}" | jq '.public_repos')
+
 # Get the "link:" in the header (See: https://developer.github.com/v3/#pagination)
 link_header=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${REQUEST_URL} -I | grep -i link: || true)
 if [[ -z $link_header ]]; then
@@ -159,7 +161,6 @@ else
   # Retrieve max page number
   page_number=$(parseQueryString "${link_header}" page)
 fi
-
 
 # For each page...
 for i in $(seq $page_number); do
@@ -187,8 +188,6 @@ for i in $(seq $page_number); do
     else
       API_PUT_URL=https://api.github.com/user/following/${clean_name}
     fi
-
-    REPO_NUMBER=$(curl -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s "https://api.${WEBSITE}.com/${OrgsOrUsers}/${TARGET}" | jq '.public_repos')
 
     # Debug: echo curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL}
     request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL});
