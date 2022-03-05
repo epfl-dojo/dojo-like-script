@@ -49,14 +49,15 @@ from an organisation on GitHub.
 ## Support
 
 If you like this script, you can show your support by using it with the
-following usernames ([contributors](https://github.com/epfl-dojo/dojo-like-script/graphs/contributors)):
+following usernames/orgs ([contributors](https://github.com/epfl-dojo/dojo-like-script/graphs/contributors)):
 
 ```
-./run.sh -u=loichu
-./run.sh -u=ponsfrilus
-./run.sh -u=richmartins
-./run.sh -u=Roccom14
-./run.sh -u=SaphireVert
-./run.sh -u=TacticsCH
-./run.sh -u=zuzu59
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --org=epfl-dojo
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=loichu
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=ponsfrilus
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=richmartins
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=Roccom14
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=SaphireVert
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=jaavlex
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=zuzu59
 ```
