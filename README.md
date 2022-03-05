@@ -53,6 +53,7 @@ following usernames/orgs ([contributors](https://github.com/epfl-dojo/dojo-like-
 
 ```
 curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --org=epfl-dojo
+curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- -fufo=epfl-dojo
 curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=loichu
 curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=ponsfrilus
 curl -s https://raw.githubusercontent.com/epfl-dojo/dojo-like-script/master/run.sh | bash -s -- --username=richmartins
