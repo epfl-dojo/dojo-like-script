@@ -48,7 +48,7 @@ function parseQueryString {
 function doCurlRequest {
   request=$(curl -s -w "%{http_code}" -X PUT -H "Accept: application/vnd.github.v3+json, application/json" -H "${TOKEN_STRING} ${TOKEN}" -s ${API_PUT_URL});
   if [[ $request > 200 && $request < 300 ]]; then
-    echo -ne "\r \033[K \e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
+    echo -e "\r \033[K \e[32m✓\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE}"
   else
     echo -e "\n \e[31m✗\e[39m \e]8;;$INFO_URL$clean_name\a$clean_name\e]8;;\a ${SENTENCE} \n"
   fi
